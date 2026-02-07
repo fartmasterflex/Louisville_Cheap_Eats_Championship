@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Louisville Cheap Eats Championship</title>
+    <!-- Library for exporting HTML to an image -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --text-color: #f0f0f0;
+            --card-bg: #2b2b2b;
+            --accent: #ff4d4d; /* Louisville Red */
+            --accent-hover: #ff1a1a;
+            --line-color: #555;
+            --gold: #ffd700;
+            --blue: #2196F3;
+            --green: #4CAF50;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #capture-zone {
+            background-color: var(--bg-color);
+            padding: 20px;
+            width: fit-content;
+        }
+
+        h1 {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+            font-size: 2.5rem;
+            text-align: center;
+        }
+
+        .credit-link {
+            display: block;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--blue);
+            text-decoration: none;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+        .credit-link:hover {
+            text-decoration: underline;
+        }
+
+        .subtitle { color: #888; margin-bottom: 20px; font-size: 1.1rem; text-align: center; }
+
+        /* --- CONTROLS --- */
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 30px; }
+
+        button {
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:active { transform: scale(0.98); }
+        
+        .btn-reset { background: #444; border: 1px solid #666; }
+        .btn-reset:hover { background: #555; }
+        
+        .btn-edit { background: var(--blue); }
+        .btn-edit:hover { background: #1976D2; }
+
+        .btn-save { background: var(--green); }
+        .btn-save:hover { background: #43A047; }
+        
+        .btn-load { background: #FF9800; }
+        .btn-load:hover { background: #F57C00; }
+        
+        #export-btn { background-image: linear-gradient(45deg, #6a11cb 0%, #2575fc 100%); }
+        #export-btn:hover { background-image: linear-gradient(45deg, #8a2be2 0%, #418cff 100%);}
+
+        /* --- BRACKET & MOBILE WRAPPERS --- */
+        .hidden { display: none !important; }
+
+        .bracket-wrapper {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            width: 100%;
+            padding-bottom: 100px;
+            min-width: 1400px;
+        }
+        
+        .mobile-wrapper {
+            width: 100%;
+            max-width: 700px;
+            margin: auto;
+        }
+
+        .side-column {
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+        }
+
+        .center-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-width: 250px;
+        }
+
+        .quadrant { display: flex; position: relative; }
+        .quadrant.right { flex-direction: row-reverse; }
+
+        .region-label {
+            position: absolute;
+            top: -30px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--gold);
+            text-transform: uppercase;
+            width: 100%;
+            text-align: center;
+        }
+
+        .round {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            margin: 0 20px;
+            position: relative;
+        }
+
+        .round-1 { gap: 20px; }
+        .round-2 { gap: 94px; }
+        .round-3 { gap: 242px; }
+        .round-4 { justify-content: center; }
+
+        .category-label {
+            position: absolute;
+            left: 0; right: 0;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+            text-transform: uppercase;
+            font-weight: bold;
+            height: 20px;
+            line-height: 20px;
+        }
+        .cat-top { top: -25px; }
+        
+        .matchup {
+            width: 170px;
+            height: 54px;
+            background: var(--card-bg);
+            border: 1px solid #444;
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 2;
+        }
+
+        .team {
+            padding: 0 8px;
+            font-size: 11px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+            height: 26px;
+            box-sizing: border-box;
+        }
+
+        .team:last-child { border-bottom: none; }
+        .team:hover { background-color: #383838; }
+        
+        .team.winner { background-color: var(--accent); color: white; font-weight: bold; }
+        .team.winner .seed, .team.winner .price { color: rgba(255,255,255,0.8); }
+
+        .team-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+        .seed { font-size: 9px; color: #888; width: 14px; }
+        .price { font-size: 9px; color: #66bb6a; font-weight: bold; }
+
+        .connector { width: 20px; height: 1px; background: var(--line-color); position: absolute; top: 50%; }
+        .left .connector { right: -20px; }
+        .right .connector { left: -20px; }
+
+        .final-four-matchup { width: 190px; margin: 60px 0; text-align: center; }
+        
+        .champion-box {
+            width: 260px; height: 120px; background: var(--accent);
+            border: 3px solid #fff; border-radius: 12px;
+            display: flex; flex-direction: column; justify-content: center;
+            align-items: center; margin-top: 20px;
+            box-shadow: 0 0 30px rgba(255, 77, 77, 0.4);
+            cursor: default;
+        }
+        .champion-label { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; }
+        .champion-name { font-size: 26px; font-weight: bold; margin-top: 5px; text-align: center; line-height: 1.2;}
+
+        .team[data-item]:hover::before {
+            content: attr(data-item) " (" attr(data-price) ")";
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            background: white; color: black; padding: 5px 10px; border-radius: 4px;
+            font-size: 11px; white-space: nowrap; z-index: 100;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5); pointer-events: none;
+            border: 1px solid #ccc;
+        }
+
+        /* --- MOBILE VIEW --- */
+        .mobile-round-header {
+            background-color: #252525;
+            color: var(--gold);
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .mobile-matchup {
+            background: var(--card-bg);
+            border: 1px solid #444;
+            border-radius: 4px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-team {
+            padding: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .mobile-team:last-child { border-bottom: none; }
+        .mobile-team.winner { background-color: var(--accent); color: white; font-weight: bold; }
+        .mobile-team .seed { margin-right: 10px; }
+
+        /* --- MODAL --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background-color: #2d2d2d; margin: 3% auto; padding: 25px;
+            border: 1px solid #555; width: 80%; max-width: 1000px; border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
+        .close-btn { color: #aaa; font-size: 32px; font-weight: bold; cursor: pointer; transition: color 0.2s;}
+        .close-btn:hover { color: #fff; }
+        
+        .editor-list {
+            max-height: 60vh; overflow-y: auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            padding-right: 10px;
+        }
+        
+        .editor-item {
+            background: #222; padding: 10px 15px; border-radius: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #444;
+        }
+        
+        .editor-info { font-size: 13px; display: flex; flex-direction: column; gap: 4px; flex-grow: 1; }
+        .editor-name { font-weight: bold; color: var(--gold); font-size: 14px;}
+        .editor-details { color: #aaa; font-size: 12px;}
+        
+        .edit-icon { cursor: pointer; font-size: 16px; margin-left: 15px; padding: 6px; background: #333; border-radius: 4px; color: #fff; border: 1px solid #555;}
+        .edit-icon:hover { background: var(--blue); border-color: var(--blue);}
+
+        .edit-form { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
+        .edit-input { 
+            background: #111; border: 1px solid #555; color: white; 
+            padding: 8px; border-radius: 4px; font-size: 12px; width: 100%; box-sizing: border-box;
+        }
+        .edit-row { display: flex; gap: 8px; }
+        .input-item { flex-grow: 2; }
+        .input-price { width: 70px; }
+        
+        .save-btn { background: #4CAF50; border: none; padding: 6px 12px; color: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: bold;}
+        .cancel-btn { background: #f44336; border: none; padding: 6px 12px; color: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: bold;}
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a1a; }
+        ::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #777; }
+        
+        @media (max-width: 900px) {
+            .editor-list { grid-template-columns: 1fr; }
+            body { min-width: unset; }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <div class="controls">
+        <button class="btn-save" onclick="saveProgress()">Save Progress</button>
+        <button class="btn-load" onclick="loadProgress()">Load Progress</button>
+        <button class="btn-edit" onclick="openEditor()">Edit Bracket</button>
+        <button class="btn-edit" id="view-toggle-btn" onclick="toggleView()">Mobile View</button>
+        <button class="btn-reset" onclick="resetBracket()">Reset All</button>
+        <button id="export-btn" class="hidden" onclick="exportBracket()">Export Bracket</button>
+    </div>
+    
+    <div id="capture-zone">
+        <h1>Louisville Cheap Eats Championship</h1>
+        <a href="https://fartmasterflex.github.io/Louisville_Cheap_Eats_Championship/" target="_blank" class="credit-link">fartmasterflex.github.io/Louisville_Cheap_Eats_Championship</a>
+        <div class="subtitle">Select winners to advance • Hover for Food Items</div>
+
+        <div class="mobile-wrapper hidden" id="mobile-wrapper">
+            <!-- Mobile view content will be injected here -->
+        </div>
+
+        <div class="bracket-wrapper" id="bracket-wrapper">
+            <!-- LEFT SIDE -->
+            <div class="side-column">
+                <div class="quadrant left" id="west-quad">
+                    <div class="region-label">West: Burgers vs Fish</div>
+                </div>
+                <div class="quadrant left" id="midwest-quad">
+                    <div class="region-label">North: Chicken vs Pubs</div>
+                </div>
+            </div>
+
+            <!-- CENTER -->
+            <div class="center-column">
+                <div class="matchup final-four-matchup" id="ff-match-1"></div>
+                <div class="champion-box">
+                    <span class="champion-label">Champion</span>
+                    <span class="champion-name" id="final-winner">???</span>
+                </div>
+                <div class="matchup final-four-matchup" id="ff-match-2"></div>
+            </div>
+
+            <!-- RIGHT SIDE -->
+            <div class="side-column">
+                <div class="quadrant right" id="east-quad">
+                    <div class="region-label">East: Tacos vs Delis & Diners</div>
+                </div>
+                <div class="quadrant right" id="south-quad">
+                    <div class="region-label">South: Asian vs Med & Caribbean</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDITOR MODAL -->
+    <div id="editorModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="margin:0; color:white; text-align:left;">Edit Bracket Entries</h2>
+                <span class="close-btn" onclick="closeEditor()">&times;</span>
+            </div>
+            <div class="editor-list" id="editorList"></div>
+            <div style="margin-top: 20px; text-align: right;">
+                <button class="btn-edit" onclick="closeEditor()">Close & Update</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+/**
+ * DATA MODEL
+ */
+const seedOrder = [0, 7, 3, 4, 2, 5, 1, 6]; 
+
+let bracketData = {
+    // WEST
+    "Burger Barons": [
+        {name: "Toastys Tavern", seed: 1, price: "$17.00", item: "Smash Burger and fries"},
+        {name: "Grind", seed: 2, price: "$17.00", item: "Grind Burger and fries"},
+        {name: "Ollie's Trolley", seed: 3, price: "$12.00", item: "Ollie Burger and fries"},
+        {name: "Bambi Bar", seed: 4, price: "$12.00", item: "Bambi Burger and chips"},
+        {name: "Kern's Korner", seed: 5, price: "$10.00", item: "Cheeseburger and chips"},
+        {name: "Dizzy Whizz", seed: 6, price: "$11.00", item: "Super Whizzburger and fries"},
+        {name: "Burger Boy", seed: 7, price: "$14.00", item: "Burger Boy Combo"},
+        {name: "Bunz Burgerz", seed: 8, price: "$17.00", item: "Beercheese Burger and fries"}
+    ],
+    "Fish & Counters": [
+        {name: "Mike Linnig's", seed: 1, price: "$18.25", item: "Fish Sandwich"},
+        {name: "The Fishery", seed: 2, price: "$13.00", item: "2pc Fish Sandwich"},
+        {name: "Dairy Kastle", seed: 3, price: "$10.00", item: "Banana Split & Chili Dog"},
+        {name: "Red Hog", seed: 4, price: "$16.00", item: "Italian Beef"},
+        {name: "Sam's Chicago Grill", seed: 5, price: "$16.00", item: "Italian Beef"},
+        {name: "Dairy Del", seed: 6, price: "$10.00", item: "Banana Split & Chili Dog"},
+        {name: "The Fish House", seed: 7, price: "$13.00", item: "Scrod Sandwich Combo"},
+        {name: "Suburban Social", seed: 8, price: "$14.50", item: "2pc Fish Combo Meal with Onions"}
+    ],
+    // MIDWEST ("North" in CSV)
+    "Bird is the Word": [
+        {name: "Chicken King", seed: 1, price: "$9.00", item: "6pc wing and 3 wedges"},
+        {name: "Louie's Hot Chicken", seed: 2, price: "$17.00", item: "Half Bird Mixed"},
+        {name: "Momma's Mustard", seed: 3, price: "$15.00", item: "Half Rack or Wings"},
+        {name: "Carali's", seed: 4, price: "$13.00", item: "Half Chicken Meal"},
+        {name: "Yummy Pollo", seed: 5, price: "$14.00", item: "Half Chicken Meal"},
+        {name: "Hammerheads", seed: 6, price: "$16.00", item: "Half Rack or Wings"},
+        {name: "Shirley Mae's", seed: 7, price: "$14.00", item: "Chicken, Greens and Cornbread"},
+        {name: "Indi's Chicken", seed: 8, price: "$11.00", item: "6pc wing and 3 wedges"}
+    ],
+    "Pubs & Pizza": [
+        {name: "FABD", seed: 1, price: "$16.00", item: "Half Rack or Wings"},
+        {name: "Shenanigans", seed: 2, price: "$15.00", item: "Burger and fries"},
+        {name: "Granville Pub", seed: 3, price: "$13.00", item: "Burger and chips"},
+        {name: "Spinellis", seed: 4, price: "$12.00", item: "Pepperoni & Special Slice"},
+        {name: "The Post", seed: 5, price: "$12.00", item: "Pepperoni & Special Slice"},
+        {name: "Old Lou Tavern", seed: 6, price: "$15.00", item: "Knocker Burger"},
+        {name: "Flanagan's", seed: 7, price: "$15.00", item: "Burger Mignon"},
+        {name: "Four Pegs", seed: 8, price: "$16.00", item: "Half Rack or Wings"}
+    ],
+    // EAST
+    "Taco Titans": [
+        {name: "Bandido Taqueria", seed: 1, price: "$13.00", item: "Carne Asada Burrito"},
+        {name: "La Torta Loca", seed: 2, price: "$11.00", item: "Carne Asada Torta"},
+        {name: "La Rosita Sol", seed: 3, price: "$12.00", item: "4x Tacos"},
+        {name: "La Tropicana", seed: 4, price: "$12.00", item: "2 Al Pastor and 1 Asada"},
+        {name: "El Pastorcito", seed: 5, price: "$12.00", item: "2 Al Pastor and 1 Asada"},
+        {name: "Las Gorditas", seed: 6, price: "$12.00", item: "4x Tacos"},
+        {name: "Tacolandia", seed: 7, price: "$16.00", item: "Carne Asada Torta"},
+        {name: "La Bamba", seed: 8, price: "$12.00", item: "Super Beef Burrito"}
+    ],
+    "Delis & Diners": [
+        {name: "Wagner's Pharmacy", seed: 1, price: "$14.00", item: "Trifecta Breakfast"},
+        {name: "Born 2 Bagel", seed: 2, price: "$15.00", item: "Lox Bagel"},
+        {name: "O'Shea's", seed: 3, price: "$12.00", item: "Reuben"},
+        {name: "Frank's Meat", seed: 4, price: "$13.00", item: "Sandwich and Chili"},
+        {name: "Morris' Deli", seed: 5, price: "$13.00", item: "Sandwich and Bean Soup"},
+        {name: "Good Belly", seed: 6, price: "$17.00", item: "Reuben"},
+        {name: "Maya Bagel Express", seed: 7, price: "$16.00", item: "Lox Bagel"},
+        {name: "Twig and Leaf", seed: 8, price: "$14.00", item: "Country Ham Breakfast"}
+    ],
+    // SOUTH
+    "Asian & Spice": [
+        {name: "Vietnam Kitchen", seed: 1, price: "$18.00", item: "Beef Pho"},
+        {name: "Chik'n & Mi", seed: 2, price: "$14.00", item: "Thai Fried Chicken"},
+        {name: "Shreeji Street", seed: 3, price: "$14.00", item: "Gujarati Thali"},
+        {name: "DaLat's Cafe", seed: 4, price: "$8.00", item: "Banh Mi Special"},
+        {name: "Banh Mi & Pho Lounge", seed: 5, price: "$8.00", item: "Banh Mi Special"},
+        {name: "Tandoori Fusion", seed: 6, price: "$17.00", item: "Non Veg Thali"},
+        {name: "Oriental House", seed: 7, price: "$15.00", item: "General Tso"},
+        {name: "VinBun", seed: 8, price: "$15.00", item: "Beef Pho"}
+    ],
+    "Mediterranean & Caribbean": [
+        {name: "Safier Deli", seed: 1, price: "$15.00", item: "Beef and Chicken Shawarma"},
+        {name: "Eden & Kissi", seed: 2, price: "$12.00", item: "Jerk Chicken Quarter Meal"},
+        {name: "The Charcoal Restaurant", seed: 3, price: "$14.00", item: "Half Chicken Meal"},
+        {name: "Kebab House", seed: 4, price: "$17.00", item: "Beef Shawarma Meal"},
+        {name: "Aljazzar Meats & Grill", seed: 5, price: "$17.00", item: "Kufta Kabab Wrap + Extra Skewer"},
+        {name: "Mirage", seed: 6, price: "$15.00", item: "Chichen Kabob Meal"},
+        {name: "Jamaican Jerk Center", seed: 7, price: "$12.00", item: "Jerk Chicken Quarter Meal"},
+        {name: "Maira", seed: 8, price: "$13.00", item: "Beef Shawarma Meal"}
+    ]
+};
+
+
+// GLOBAL STATE
+let tournamentState = {};
+let finalChampion = null;
+
+function init() {
+    renderAllViews();
+}
+
+function escapeStr(str) {
+    if(!str) return '';
+    return str.replace(/'/g, "\\'");
+}
+
+// --- VIEW MANAGEMENT ---
+function toggleView() {
+    const bracketWrapper = document.getElementById('bracket-wrapper');
+    const mobileWrapper = document.getElementById('mobile-wrapper');
+    const toggleBtn = document.getElementById('view-toggle-btn');
+    
+    const isBracketVisible = !bracketWrapper.classList.contains('hidden');
+    
+    if (isBracketVisible) {
+        bracketWrapper.classList.add('hidden');
+        mobileWrapper.classList.remove('hidden');
+        toggleBtn.textContent = 'Bracket View';
+    } else {
+        bracketWrapper.classList.remove('hidden');
+        mobileWrapper.classList.add('hidden');
+        toggleBtn.textContent = 'Mobile View';
+    }
+}
+
+// --- MASTER RENDER FUNCTION ---
+function renderAllViews() {
+    renderBracket();
+    renderMobileView();
+}
+
+// --- BRACKET RENDERING ---
+function renderBracket() {
+    const champWinner = document.getElementById('final-winner');
+    champWinner.innerHTML = '???';
+    champWinner.style.color = '#fff';
+    champWinner.style.fontSize = '24px';
+    
+    buildQuadrant('west-quad', 'Burger Barons', 'Fish & Counters', 'west');
+    buildQuadrant('midwest-quad', 'Bird is the Word', 'Pubs & Pizza', 'midwest');
+    buildQuadrant('east-quad', 'Taco Titans', 'Delis & Diners', 'east');
+    buildQuadrant('south-quad', 'Asian & Spice', 'Mediterranean & Caribbean', 'south');
+
+    applyStateToDOM();
+    updateFinalFourDisplay();
+}
+
+function buildQuadrant(elementId, cat1, cat2, regionKey) {
+    const container = document.getElementById(elementId);
+    if (!container) return;
+    container.innerHTML = '';
+
+    const teams1 = seedOrder.map(i => bracketData[cat1][i]);
+    const teams2 = seedOrder.map(i => bracketData[cat2][i]);
+
+    const r1 = createRoundDiv(1);
+    const r2 = createRoundDiv(2);
+    const r3 = createRoundDiv(3);
+    const r4 = createRoundDiv(4);
+
+    let h1 = document.createElement('div');
+    h1.className = 'category-label cat-top';
+    h1.innerText = cat1;
+    container.appendChild(h1);
+    
+    let h2 = document.createElement('div');
+    h2.className = 'category-label';
+    h2.style.top = '296px'; 
+    h2.innerText = cat2;
+    container.appendChild(h2);
+
+    for(let i=0; i<4; i++) {
+        r1.appendChild(createMatchCard(`${regionKey}-r1-${i}`, teams1[i*2], teams1[i*2+1], `${regionKey}-r2-${Math.floor(i/2)}`, i%2));
+    }
+    for(let i=0; i<4; i++) {
+        r1.appendChild(createMatchCard(`${regionKey}-r1-${i+4}`, teams2[i*2], teams2[i*2+1], `${regionKey}-r2-${Math.floor((i+4)/2)}`, i%2));
+    }
+
+    for(let i=0; i<4; i++) r2.appendChild(createEmptyMatchCard(`${regionKey}-r2-${i}`, `${regionKey}-r3-${Math.floor(i/2)}`, i%2));
+    for(let i=0; i<2; i++) r3.appendChild(createEmptyMatchCard(`${regionKey}-r3-${i}`, `${regionKey}-r4-0`, i%2));
+    r4.appendChild(createEmptyMatchCard(`${regionKey}-r4-0`, `ff-${regionKey}`, 0));
+
+    container.append(r1, r2, r3, r4);
+}
+
+function createRoundDiv(num) {
+    const d = document.createElement('div');
+    d.className = `round round-${num}`;
+    return d;
+}
+
+function createMatchCard(id, t1, t2, nextId, slotIndex) {
+    const div = document.createElement('div');
+    div.className = 'matchup';
+    div.id = id;
+    div.dataset.topData = JSON.stringify(t1);
+    div.dataset.bottomData = JSON.stringify(t2);
+    div.innerHTML = `<div class="connector"></div>
+                     ${createTeamHTML(t1, id, nextId, slotIndex, 'top')}
+                     ${createTeamHTML(t2, id, nextId, slotIndex, 'bottom')}`;
+    return div;
+}
+
+function createEmptyMatchCard(id, nextId, slotIndex) {
+    const div = document.createElement('div');
+    div.className = 'matchup';
+    div.id = id;
+    div.innerHTML = `<div class="connector"></div>
+        <div class="team" id="${id}-top" onclick="handleEmptyClick('${id}', 'top', '${nextId}', ${slotIndex})"></div>
+        <div class="team" id="${id}-bottom" onclick="handleEmptyClick('${id}', 'bottom', '${nextId}', ${slotIndex})"></div>`;
+    return div;
+}
+
+function createTeamHTML(team, matchId, nextId, slotIndex, position) {
+    if(!team) return `<div class="team"></div>`;
+    return `
+        <div class="team" 
+             id="${matchId}-${position}"
+             data-name="${team.name}" 
+             data-item="${team.item}" 
+             data-price="${team.price}"
+             data-seed="${team.seed}"
+             onclick="advance('${matchId}', '${position}', '${nextId}', ${slotIndex})">
+            <span class="seed">${team.seed}</span>
+            <span class="team-name">${team.name}</span>
+            <span class="price">${team.price}</span>
+        </div>
+    `;
+}
+
+// --- MOBILE VIEW RENDERING ---
+function renderMobileView() {
+    const container = document.getElementById('mobile-wrapper');
+    container.innerHTML = '';
+    
+    const structure = [
+        { round: 1, name: 'Round of 64', count: 32 },
+        { round: 2, name: 'Round of 32', count: 16 },
+        { round: 3, name: 'Sweet 16', count: 8 },
+        { round: 4, name: 'Elite 8', count: 4 },
+        { round: 5, name: 'Final Four', count: 2 },
+        { round: 6, name: 'Championship', count: 1 }
+    ];
+
+    const regionDefs = [
+        { key: 'west', name: 'West: Burgers vs Fish' },
+        { key: 'midwest', name: 'North: Chicken vs Pubs' },
+        { key: 'east', name: 'East: Tacos vs Delis & Diners' },
+        { key: 'south', name: 'South: Asian vs Med & Caribbean' }
+    ];
+
+    structure.forEach(roundInfo => {
+        let roundHasMatches = false;
+        const roundContainer = document.createElement('div');
+        
+        if (roundInfo.round >= 5) {
+             const header = document.createElement('div');
+             header.className = 'mobile-round-header';
+             header.textContent = roundInfo.name;
+             roundContainer.appendChild(header);
+
+             if (roundInfo.round === 5) { // Final Four
+                 const ff1 = createMobileMatchup('ff-match-1', tournamentState['ff-west'], tournamentState['ff-midwest']);
+                 const ff2 = createMobileMatchup('ff-match-2', tournamentState['ff-east'], tournamentState['ff-south']);
+                 if (ff1) { roundContainer.appendChild(ff1); roundHasMatches = true; }
+                 if (ff2) { roundContainer.appendChild(ff2); roundHasMatches = true; }
+             } else { // Championship
+                 const s1Winner = tournamentState.finals ? tournamentState.finals['semi-1'] : null;
+                 const s2Winner = tournamentState.finals ? tournamentState.finals['semi-2'] : null;
+                 const champMatch = createMobileMatchup('championship', s1Winner, s2Winner);
+                 if (champMatch) { roundContainer.appendChild(champMatch); roundHasMatches = true; }
+             }
+
+        } else {
+             regionDefs.forEach(region => {
+                 const header = document.createElement('div');
+                 header.className = 'mobile-round-header';
+                 header.textContent = `${roundInfo.name} - ${region.name}`;
+                 
+                 let matchesForRegion = [];
+                 for (let i = 0; i < roundInfo.count / 4; i++) {
+                     const matchId = `${region.key}-r${roundInfo.round}-${i}`;
+                     const matchDiv = document.getElementById(matchId);
+                     if (matchDiv) {
+                         const topDataEl = document.getElementById(`${matchId}-top`);
+                         const bottomDataEl = document.getElementById(`${matchId}-bottom`);
+                         
+                         const t1 = topDataEl && topDataEl.dataset.name ? { name: topDataEl.dataset.name, seed: topDataEl.dataset.seed } : null;
+                         const t2 = bottomDataEl && bottomDataEl.dataset.name ? { name: bottomDataEl.dataset.name, seed: bottomDataEl.dataset.seed } : null;
+                         
+                         if(t1 || t2) {
+                            matchesForRegion.push(createMobileMatchup(matchId, t1, t2));
+                            roundHasMatches = true;
+                         }
+                     }
+                 }
+                 if(matchesForRegion.length > 0){
+                    roundContainer.appendChild(header);
+                    matchesForRegion.forEach(m => roundContainer.appendChild(m));
+                 }
+             });
+        }
+        
+        if (roundHasMatches) {
+            container.appendChild(roundContainer);
+        }
+    });
+
+    if (finalChampion) {
+        const champHeader = document.createElement('div');
+        champHeader.className = 'mobile-round-header';
+        champHeader.style.backgroundColor = 'var(--gold)';
+        champHeader.style.color = 'black';
+        champHeader.textContent = `🏆 Champion: ${finalChampion} 🏆`;
+        container.appendChild(champHeader);
+    }
+}
+
+function createMobileMatchup(matchId, t1, t2) {
+    if (!t1 && !t2) return null;
+
+    const matchupDiv = document.createElement('div');
+    matchupDiv.className = 'mobile-matchup';
+
+    let winnerPos = null;
+    if (matchId === 'ff-match-1') {
+        const winner = tournamentState.finals ? tournamentState.finals['semi-1'] : null;
+        if(winner) winnerPos = (t1 && winner.name === t1.name) ? 'top' : 'bottom';
+    } else if (matchId === 'ff-match-2') {
+        const winner = tournamentState.finals ? tournamentState.finals['semi-2'] : null;
+        if(winner) winnerPos = (t1 && winner.name === t1.name) ? 'top' : 'bottom';
+    } else if (matchId === 'championship') {
+        winnerPos = finalChampion ? ((t1 && finalChampion === t1.name) ? 'top' : 'bottom') : null;
+    } else {
+        winnerPos = tournamentState[matchId];
+    }
+    
+    matchupDiv.appendChild(createMobileTeam(matchId, 'top', t1, winnerPos === 'top'));
+    matchupDiv.appendChild(createMobileTeam(matchId, 'bottom', t2, winnerPos === 'bottom'));
+    
+    return matchupDiv;
+}
+
+function createMobileTeam(matchId, position, team, isWinner) {
+    const teamDiv = document.createElement('div');
+    teamDiv.className = 'mobile-team';
+    if(isWinner) teamDiv.classList.add('winner');
+
+    if (team) {
+        teamDiv.innerHTML = `
+            <span><span class="seed">${team.seed || ''}</span>${team.name}</span>
+        `;
+        if (matchId === 'ff-match-1') {
+            teamDiv.onclick = () => pickFinalist('semi-1', team.name, team.seed, team.price);
+        } else if (matchId === 'ff-match-2') {
+            teamDiv.onclick = () => pickFinalist('semi-2', team.name, team.seed, team.price);
+        } else if (matchId === 'championship') {
+             teamDiv.onclick = () => setChampion(team.name);
+        } else {
+            const nextId = getNextMatchId(matchId);
+            const slotIndex = getSlotIndex(matchId);
+            teamDiv.onclick = () => advance(matchId, position, nextId, slotIndex);
+        }
+    } else {
+        teamDiv.innerHTML = '<span>TBD</span>';
+    }
+    
+    return teamDiv;
+}
+
+
+// --- LOGIC ---
+
+function advance(matchId, position, nextId, slotIndex) {
+    tournamentState[matchId] = position;
+    renderAllViews();
+}
+
+function getNextMatchId(currentId) {
+    const parts = currentId.split('-'); 
+    const region = parts[0];
+    const roundNum = parseInt(parts[1].replace('r',''));
+    const matchNum = parseInt(parts[2]);
+    if(roundNum === 4) return `ff-${region}`;
+    return `${region}-r${roundNum+1}-${Math.floor(matchNum / 2)}`;
+}
+
+function getSlotIndex(currentId) {
+    const parts = currentId.split('-');
+    const matchNum = parseInt(parts[2]);
+    return matchNum % 2;
+}
+
+function handleEmptyClick(matchId, position, nextId, slotIndex) {
+    const el = document.getElementById(`${matchId}-${position}`);
+    if(el && el.getAttribute('data-name')) {
+        advance(matchId, position, nextId, slotIndex);
+    }
+}
+
+function applyStateToDOM() {
+    for (const [matchId, result] of Object.entries(tournamentState)) {
+        if(matchId.startsWith('ff-') || matchId === 'finals' || matchId === 'champion') continue;
+        const parts = matchId.split('-');
+        if(parts.length < 3) continue;
+
+        const winnerEl = document.getElementById(`${matchId}-${result}`);
+        if(!winnerEl) continue;
+
+        const name = winnerEl.getAttribute('data-name');
+        const item = winnerEl.getAttribute('data-item');
+        const price = winnerEl.getAttribute('data-price');
+        const seed = winnerEl.getAttribute('data-seed');
+        
+        const nextId = getNextMatchId(matchId);
+        const slotIndex = getSlotIndex(matchId);
+
+        updateMatchUI(matchId, result);
+        
+        if (nextId.startsWith('ff-')) {
+            tournamentState[nextId] = { name, item, price, seed };
+        } else {
+            const targetSlot = slotIndex === 0 ? 'top' : 'bottom';
+            const targetEl = document.getElementById(`${nextId}-${targetSlot}`);
+            if (targetEl) {
+                targetEl.innerHTML = `<span class="seed">${seed}</span><span class="team-name">${name}</span><span class="price">${price}</span>`;
+                targetEl.setAttribute('data-name', name);
+                targetEl.setAttribute('data-item', item);
+                targetEl.setAttribute('data-price', price);
+                targetEl.setAttribute('data-seed', seed);
+                if (tournamentState[nextId]) updateMatchUI(nextId, tournamentState[nextId]);
+            }
+        }
+    }
+}
+
+function updateMatchUI(matchId, winnerPos) {
+    const top = document.getElementById(`${matchId}-top`);
+    const bottom = document.getElementById(`${matchId}-bottom`);
+    if(top) top.classList.remove('winner');
+    if(bottom) bottom.classList.remove('winner');
+    const winner = document.getElementById(`${matchId}-${winnerPos}`);
+    if(winner) winner.classList.add('winner');
+}
+
+// --- FINAL FOUR ---
+function updateFinalFourDisplay() {
+    renderFinalMatch('ff-match-1', tournamentState['ff-west'], tournamentState['ff-midwest'], 'semi-1');
+    renderFinalMatch('ff-match-2', tournamentState['ff-east'], tournamentState['ff-south'], 'semi-2');
+    
+    if(finalChampion) {
+        crowdChamp(finalChampion);
+    } else if(tournamentState['finals']) {
+         const s1 = tournamentState['finals']['semi-1'];
+         const s2 = tournamentState['finals']['semi-2'];
+         if(s1 && s2) {
+             const champBox = document.getElementById('final-winner');
+             champBox.innerHTML = `<div style="font-size:14px; margin-bottom:5px;">${s1.name} vs ${s2.name}</div>
+                         <div style="font-size:10px; color:#ddd;">Click to Crown</div>
+                         <div style="margin-top:5px;">
+                            <button onclick="setChampion('${escapeStr(s1.name)}')" style="font-size:10px; padding:2px 5px; margin:0; background: #fff; color: #000;">${s1.name}</button>
+                            <button onclick="setChampion('${escapeStr(s2.name)}')" style="font-size:10px; padding:2px 5px; margin:0; background: #fff; color: #000;">${s2.name}</button>
+                         </div>`;
+             champBox.style.fontSize = "16px";
+             champBox.style.color = "white";
+         }
+    }
+}
+
+function renderFinalMatch(elId, t1, t2, matchId) {
+    const div = document.getElementById(elId);
+    if (!div) return;
+    div.innerHTML = '';
+    const currentWinnerName = tournamentState['finals'] ? (tournamentState['finals'][matchId] ? tournamentState['finals'][matchId].name : null) : null;
+    let html = '';
+    html += createFinalTeamHTML(t1, matchId, currentWinnerName);
+    html += createFinalTeamHTML(t2, matchId, currentWinnerName);
+    div.innerHTML = html;
+}
+
+function createFinalTeamHTML(team, matchId, currentWinnerName) {
+    if(!team) return `<div class="team"></div>`;
+    const isWinner = team.name === currentWinnerName;
+    const safeName = escapeStr(team.name);
+    return `<div class="team ${isWinner ? 'winner' : ''}" 
+            onclick="pickFinalist('${matchId}', '${safeName}', '${team.seed}', '${team.price}')">
+            <span class="seed">${team.seed}</span><span class="team-name">${team.name}</span>
+        </div>`;
+}
+
+function pickFinalist(matchId, name, seed, price) {
+    if(!tournamentState['finals']) tournamentState['finals'] = {};
+    tournamentState['finals'][matchId] = { name, seed, price };
+    renderAllViews();
+}
+
+function setChampion(name) {
+    finalChampion = name;
+    renderAllViews();
+    const box = document.querySelector('.champion-box');
+    box.style.backgroundColor = '#ffd700';
+    setTimeout(() => box.style.backgroundColor = 'var(--accent)', 300);
+    document.getElementById('export-btn').classList.remove('hidden');
+}
+
+function crowdChamp(name) {
+    const display = document.getElementById('final-winner');
+    display.innerHTML = name;
+    display.style.fontSize = "30px";
+    display.style.color = "gold";
+}
+
+// --- SAVE/LOAD/EXPORT ---
+function saveProgress() {
+    const payload = { data: bracketData, state: tournamentState, champion: finalChampion, finals: tournamentState['finals'] };
+    localStorage.setItem('louisvilleBracket_v8', JSON.stringify(payload));
+    alert("Bracket Saved!");
+}
+
+function loadProgress() {
+    const raw = localStorage.getItem('louisvilleBracket_v8');
+    if(!raw) { alert("No saved bracket found."); return; }
+    try {
+        const payload = JSON.parse(raw);
+        bracketData = payload.data;
+        tournamentState = payload.state;
+        finalChampion = payload.champion;
+        if(payload.finals) tournamentState['finals'] = payload.finals;
+        renderAllViews();
+    } catch(e) { console.error(e); alert("Error loading save file."); }
+}
+
+function exportBracket() {
+    const captureEl = document.getElementById('capture-zone');
+    const isMobile = !document.getElementById('mobile-wrapper').classList.contains('hidden');
+
+    if (isMobile) {
+        alert("Please switch back to Bracket View to export the image.");
+        return;
+    }
+    
+    // Hide buttons temporarily for capture
+    const controls = document.querySelector('.controls');
+    controls.style.display = 'none';
+
+    html2canvas(captureEl, {
+        backgroundColor: '#1e1e1e',
+        scale: 2 
+    }).then(canvas => {
+        // Show controls again
+        controls.style.display = 'flex';
+
+        const link = document.createElement('a');
+        link.download = 'louisville-eats-bracket.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+}
+
+function resetBracket() {
+    if(confirm("Are you sure? This will clear current selections and any edits.")) {
+        tournamentState = {};
+        finalChampion = null;
+        document.getElementById('export-btn').classList.add('hidden');
+        renderAllViews();
+    }
+}
+
+// --- EDITOR ---
+function openEditor() {
+    const list = document.getElementById('editorList');
+    list.innerHTML = '';
+    let allTeams = [];
+    for(let cat in bracketData) {
+        bracketData[cat].forEach((team, index) => {
+            allTeams.push({ ...team, category: cat, originalIndex: index });
+        });
+    }
+    allTeams.sort((a, b) => a.name.localeCompare(b.name));
+    allTeams.forEach(t => {
+        let el = document.createElement('div');
+        el.className = 'editor-item';
+        el.id = `edit-${t.category}-${t.originalIndex}`;
+        el.innerHTML = renderEditorItem(t);
+        list.appendChild(el);
+    });
+    document.getElementById('editorModal').style.display = 'block';
+}
+
+function renderEditorItem(t) {
+    return `
+        <div class="editor-info">
+            <span class="editor-name">${t.name}</span>
+            <span class="editor-details">${t.item} • ${t.price}</span>
+        </div>
+        <div class="edit-icon" onclick="enableEdit('${t.category}', ${t.originalIndex})">✎</div>
+    `;
+}
+
+function enableEdit(cat, index) {
+    const team = bracketData[cat][index];
+    const container = document.getElementById(`edit-${cat}-${index}`);
+    container.innerHTML = `
+        <div class="edit-form">
+            <input type="text" class="edit-input input-name" id="input-name-${cat}-${index}" value="${team.name}" placeholder="Restaurant Name">
+            <div class="edit-row">
+                <input type="text" class="edit-input input-item" id="input-item-${cat}-${index}" value="${team.item}" placeholder="Featured Item">
+                <input type="text" class="edit-input input-price" id="input-price-${cat}-${index}" value="${team.price}" placeholder="Price">
+            </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 5px;">
+            <button class="save-btn" onclick="saveEdit('${cat}', ${index})">Save</button>
+            <button class="cancel-btn" onclick="cancelEdit('${cat}', ${index})">X</button>
+        </div>
+    `;
+}
+
+function saveEdit(cat, index) {
+    const newName = document.getElementById(`input-name-${cat}-${index}`).value;
+    const newItem = document.getElementById(`input-item-${cat}-${index}`).value;
+    const newPrice = document.getElementById(`input-price-${cat}-${index}`).value;
+    
+    bracketData[cat][index].name = newName;
+    bracketData[cat][index].item = newItem;
+    bracketData[cat][index].price = newPrice;
+    
+    const team = bracketData[cat][index];
+    const container = document.getElementById(`edit-${cat}-${index}`);
+    container.innerHTML = renderEditorItem(team);
+}
+
+function cancelEdit(cat, index) {
+    const team = bracketData[cat][index];
+    const container = document.getElementById(`edit-${cat}-${index}`);
+    container.innerHTML = renderEditorItem(team);
+}
+
+function closeEditor() {
+    document.getElementById('editorModal').style.display = 'none';
+    renderAllViews();
+}
+
+init();
+
+</script>
+</body>
+</html>

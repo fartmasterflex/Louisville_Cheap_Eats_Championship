@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0">
     <title>Louisville Cheap Eats Championship</title>
     <!-- Library for exporting HTML to an image -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -25,15 +25,21 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
+            /* FIX: Removed fixed centering that pushes content off-screen on mobile */
             display: flex;
             flex-direction: column;
-            align-items: center;
+            min-height: 100vh;
         }
 
         #capture-zone {
             background-color: var(--bg-color);
-            padding: 20px;
-            width: fit-content;
+            padding: 10px;
+            /* FIX: Allow this zone to take full width but not overflow the body awkwardly */
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         h1 {
@@ -41,8 +47,9 @@
             text-transform: uppercase;
             letter-spacing: 3px;
             margin-bottom: 5px;
-            font-size: 2.5rem;
+            font-size: clamp(1.5rem, 5vw, 2.5rem); /* Responsive font size */
             text-align: center;
+            line-height: 1.2;
         }
 
         .credit-link {
@@ -53,6 +60,7 @@
             text-decoration: none;
             margin-top: 5px;
             margin-bottom: 20px;
+            word-break: break-all; /* Prevent link from breaking mobile layout */
         }
         .credit-link:hover {
             text-decoration: underline;
@@ -66,12 +74,13 @@
         button {
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px 20px; /* Larger touch target */
             cursor: pointer;
             border-radius: 4px;
             font-weight: bold;
             font-size: 14px;
             transition: background 0.2s, transform 0.1s;
+            touch-action: manipulation; /* Improves touch response */
         }
         button:active { transform: scale(0.98); }
         
@@ -93,19 +102,30 @@
         /* --- BRACKET & MOBILE WRAPPERS --- */
         .hidden { display: none !important; }
 
+        /* FIX: Container for horizontal scrolling on Desktop */
+        .bracket-scroll-container {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scroll on iOS */
+            padding-bottom: 20px;
+            display: flex;
+            justify-content: center; 
+        }
+
         .bracket-wrapper {
             display: flex;
             justify-content: center;
             gap: 40px;
-            width: 100%;
+            /* FIX: Ensure content isn't compressed */
+            min-width: 1400px; 
             padding-bottom: 100px;
-            min-width: 1400px;
         }
         
         .mobile-wrapper {
             width: 100%;
             max-width: 700px;
             margin: auto;
+            padding-bottom: 50px;
         }
 
         .side-column {
@@ -229,12 +249,12 @@
         .mobile-round-header {
             background-color: #252525;
             color: var(--gold);
-            padding: 10px;
+            padding: 15px 10px;
             margin-top: 20px;
             border-radius: 6px;
             text-align: center;
             font-weight: bold;
-            font-size: 14px;
+            font-size: 16px;
             text-transform: uppercase;
         }
         
@@ -248,8 +268,8 @@
         }
 
         .mobile-team {
-            padding: 12px;
-            font-size: 14px;
+            padding: 16px 12px; /* Bigger touch target */
+            font-size: 16px;
             cursor: pointer;
             border-bottom: 1px solid #333;
             display: flex;
@@ -269,7 +289,7 @@
         }
         .modal-content {
             background-color: #2d2d2d; margin: 3% auto; padding: 25px;
-            border: 1px solid #555; width: 80%; max-width: 1000px; border-radius: 8px;
+            border: 1px solid #555; width: 90%; max-width: 1000px; border-radius: 8px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;}
@@ -292,7 +312,7 @@
         .editor-name { font-weight: bold; color: var(--gold); font-size: 14px;}
         .editor-details { color: #aaa; font-size: 12px;}
         
-        .edit-icon { cursor: pointer; font-size: 16px; margin-left: 15px; padding: 6px; background: #333; border-radius: 4px; color: #fff; border: 1px solid #555;}
+        .edit-icon { cursor: pointer; font-size: 16px; margin-left: 15px; padding: 10px; background: #333; border-radius: 4px; color: #fff; border: 1px solid #555;}
         .edit-icon:hover { background: var(--blue); border-color: var(--blue);}
 
         .edit-form { display: flex; flex-direction: column; gap: 8px; flex-grow: 1; }
@@ -304,8 +324,8 @@
         .input-item { flex-grow: 2; }
         .input-price { width: 70px; }
         
-        .save-btn { background: #4CAF50; border: none; padding: 6px 12px; color: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: bold;}
-        .cancel-btn { background: #f44336; border: none; padding: 6px 12px; color: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: bold;}
+        .save-btn { background: #4CAF50; border: none; padding: 8px 12px; color: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: bold;}
+        .cancel-btn { background: #f44336; border: none; padding: 8px 12px; color: white; cursor: pointer; font-size: 12px; border-radius: 4px; font-weight: bold;}
 
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #1a1a1a; }
@@ -314,59 +334,64 @@
         
         @media (max-width: 900px) {
             .editor-list { grid-template-columns: 1fr; }
-            body { min-width: unset; }
+            /* Mobile tweaks */
+            .controls { flex-direction: column; width: 100%; }
+            button { width: 100%; }
         }
 
     </style>
 </head>
 <body>
     
-    <div class="controls">
-        <button class="btn-save" onclick="saveProgress()">Save Progress</button>
-        <button class="btn-load" onclick="loadProgress()">Load Progress</button>
-        <button class="btn-edit" onclick="openEditor()">Edit Bracket</button>
-        <button class="btn-edit" id="view-toggle-btn" onclick="toggleView()">Mobile View</button>
-        <button class="btn-reset" onclick="resetBracket()">Reset All</button>
-        <button id="export-btn" class="hidden" onclick="exportBracket()">Export Bracket</button>
-    </div>
-    
     <div id="capture-zone">
         <h1>Louisville Cheap Eats Championship</h1>
         <a href="https://fartmasterflex.github.io/Louisville_Cheap_Eats_Championship/" target="_blank" class="credit-link">fartmasterflex.github.io/Louisville_Cheap_Eats_Championship</a>
         <div class="subtitle">Select winners to advance • Hover for Food Items</div>
 
+        <div class="controls">
+            <button class="btn-edit" id="view-toggle-btn" onclick="toggleView()">Switch to Mobile View</button>
+            <button class="btn-save" onclick="saveProgress()">Save Progress</button>
+            <button class="btn-load" onclick="loadProgress()">Load Progress</button>
+            <button class="btn-edit" onclick="openEditor()">Edit Bracket</button>
+            <button class="btn-reset" onclick="resetBracket()">Reset All</button>
+            <button id="export-btn" class="hidden" onclick="exportBracket()">Export Bracket Image</button>
+        </div>
+
         <div class="mobile-wrapper hidden" id="mobile-wrapper">
             <!-- Mobile view content will be injected here -->
         </div>
 
-        <div class="bracket-wrapper" id="bracket-wrapper">
-            <!-- LEFT SIDE -->
-            <div class="side-column">
-                <div class="quadrant left" id="west-quad">
-                    <div class="region-label">West: Burgers vs Fish</div>
+        <!-- Scroll Container for Desktop View on small screens -->
+        <div class="bracket-scroll-container" id="bracket-scroll-container">
+            <div class="bracket-wrapper" id="bracket-wrapper">
+                <!-- LEFT SIDE -->
+                <div class="side-column">
+                    <div class="quadrant left" id="west-quad">
+                        <div class="region-label">West: Burgers vs Fish</div>
+                    </div>
+                    <div class="quadrant left" id="midwest-quad">
+                        <div class="region-label">North: Chicken vs Pubs</div>
+                    </div>
                 </div>
-                <div class="quadrant left" id="midwest-quad">
-                    <div class="region-label">North: Chicken vs Pubs</div>
-                </div>
-            </div>
 
-            <!-- CENTER -->
-            <div class="center-column">
-                <div class="matchup final-four-matchup" id="ff-match-1"></div>
-                <div class="champion-box">
-                    <span class="champion-label">Champion</span>
-                    <span class="champion-name" id="final-winner">???</span>
+                <!-- CENTER -->
+                <div class="center-column">
+                    <div class="matchup final-four-matchup" id="ff-match-1"></div>
+                    <div class="champion-box">
+                        <span class="champion-label">Champion</span>
+                        <span class="champion-name" id="final-winner">???</span>
+                    </div>
+                    <div class="matchup final-four-matchup" id="ff-match-2"></div>
                 </div>
-                <div class="matchup final-four-matchup" id="ff-match-2"></div>
-            </div>
 
-            <!-- RIGHT SIDE -->
-            <div class="side-column">
-                <div class="quadrant right" id="east-quad">
-                    <div class="region-label">East: Tacos vs Delis & Diners</div>
-                </div>
-                <div class="quadrant right" id="south-quad">
-                    <div class="region-label">South: Asian vs Med & Caribbean</div>
+                <!-- RIGHT SIDE -->
+                <div class="side-column">
+                    <div class="quadrant right" id="east-quad">
+                        <div class="region-label">East: Tacos vs Delis & Diners</div>
+                    </div>
+                    <div class="quadrant right" id="south-quad">
+                        <div class="region-label">South: Asian vs Med & Caribbean</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -380,8 +405,8 @@
                 <span class="close-btn" onclick="closeEditor()">&times;</span>
             </div>
             <div class="editor-list" id="editorList"></div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button class="btn-edit" onclick="closeEditor()">Close & Update</button>
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="btn-edit" onclick="closeEditor()" style="width: auto;">Close & Update</button>
             </div>
         </div>
     </div>
@@ -486,6 +511,17 @@ let finalChampion = null;
 
 function init() {
     renderAllViews();
+    // Auto-detect mobile and switch view if screen is narrow
+    if (window.innerWidth < 1000) {
+        // We force the toggle, but we also ensure the state matches the visual expectation
+        const bracketScroll = document.getElementById('bracket-scroll-container');
+        const mobileWrapper = document.getElementById('mobile-wrapper');
+        const toggleBtn = document.getElementById('view-toggle-btn');
+        
+        bracketScroll.classList.add('hidden');
+        mobileWrapper.classList.remove('hidden');
+        toggleBtn.textContent = 'Switch to Bracket View';
+    }
 }
 
 function escapeStr(str) {
@@ -495,20 +531,21 @@ function escapeStr(str) {
 
 // --- VIEW MANAGEMENT ---
 function toggleView() {
-    const bracketWrapper = document.getElementById('bracket-wrapper');
+    const bracketScroll = document.getElementById('bracket-scroll-container');
     const mobileWrapper = document.getElementById('mobile-wrapper');
     const toggleBtn = document.getElementById('view-toggle-btn');
     
-    const isBracketVisible = !bracketWrapper.classList.contains('hidden');
+    // Check if bracket is currently visible (not hidden)
+    const isBracketVisible = !bracketScroll.classList.contains('hidden');
     
     if (isBracketVisible) {
-        bracketWrapper.classList.add('hidden');
+        bracketScroll.classList.add('hidden');
         mobileWrapper.classList.remove('hidden');
-        toggleBtn.textContent = 'Bracket View';
+        toggleBtn.textContent = 'Switch to Bracket View';
     } else {
-        bracketWrapper.classList.remove('hidden');
+        bracketScroll.classList.remove('hidden');
         mobileWrapper.classList.add('hidden');
-        toggleBtn.textContent = 'Mobile View';
+        toggleBtn.textContent = 'Switch to Mobile View';
     }
 }
 
@@ -674,8 +711,8 @@ function renderMobileView() {
                          const topDataEl = document.getElementById(`${matchId}-top`);
                          const bottomDataEl = document.getElementById(`${matchId}-bottom`);
                          
-                         const t1 = topDataEl && topDataEl.dataset.name ? { name: topDataEl.dataset.name, seed: topDataEl.dataset.seed } : null;
-                         const t2 = bottomDataEl && bottomDataEl.dataset.name ? { name: bottomDataEl.dataset.name, seed: bottomDataEl.dataset.seed } : null;
+                         const t1 = topDataEl && topDataEl.dataset.name ? { name: topDataEl.dataset.name, seed: topDataEl.dataset.seed, price: topDataEl.dataset.price } : null;
+                         const t2 = bottomDataEl && bottomDataEl.dataset.name ? { name: bottomDataEl.dataset.name, seed: bottomDataEl.dataset.seed, price: bottomDataEl.dataset.price } : null;
                          
                          if(t1 || t2) {
                             matchesForRegion.push(createMobileMatchup(matchId, t1, t2));
@@ -860,7 +897,12 @@ function renderFinalMatch(elId, t1, t2, matchId) {
     const div = document.getElementById(elId);
     if (!div) return;
     div.innerHTML = '';
-    const currentWinnerName = tournamentState['finals'] ? (tournamentState['finals'][matchId] ? tournamentState['finals'][matchId].name : null) : null;
+    
+    // Safety check for tournamentState.finals
+    const currentWinnerName = (tournamentState['finals'] && tournamentState['finals'][matchId]) 
+                              ? tournamentState['finals'][matchId].name 
+                              : null;
+                              
     let html = '';
     html += createFinalTeamHTML(t1, matchId, currentWinnerName);
     html += createFinalTeamHTML(t2, matchId, currentWinnerName);
@@ -921,16 +963,24 @@ function loadProgress() {
 
 function exportBracket() {
     const captureEl = document.getElementById('capture-zone');
-    const isMobile = !document.getElementById('mobile-wrapper').classList.contains('hidden');
+    const mobileWrapper = document.getElementById('mobile-wrapper');
+    const isMobileView = !mobileWrapper.classList.contains('hidden');
 
-    if (isMobile) {
-        alert("Please switch back to Bracket View to export the image.");
+    if (isMobileView) {
+        alert("The visual bracket cannot be exported in Mobile View. Please switch to Bracket View first.");
         return;
     }
     
     // Hide buttons temporarily for capture
     const controls = document.querySelector('.controls');
     controls.style.display = 'none';
+    
+    // Check if html2canvas loaded
+    if(typeof html2canvas === 'undefined') {
+        alert("Image export library failed to load. Please check your internet connection.");
+        controls.style.display = 'flex';
+        return;
+    }
 
     html2canvas(captureEl, {
         backgroundColor: '#1e1e1e',
@@ -943,6 +993,10 @@ function exportBracket() {
         link.download = 'louisville-eats-bracket.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
+    }).catch(err => {
+        console.error(err);
+        alert("Failed to export image.");
+        controls.style.display = 'flex';
     });
 }
 
@@ -1013,15 +1067,19 @@ function saveEdit(cat, index) {
     bracketData[cat][index].item = newItem;
     bracketData[cat][index].price = newPrice;
     
+    // Re-fetch the updated team object for rendering
     const team = bracketData[cat][index];
     const container = document.getElementById(`edit-${cat}-${index}`);
-    container.innerHTML = renderEditorItem(team);
+    // Need to pass the combined object structure expected by renderEditorItem
+    const combinedTeam = { ...team, category: cat, originalIndex: index };
+    container.innerHTML = renderEditorItem(combinedTeam);
 }
 
 function cancelEdit(cat, index) {
     const team = bracketData[cat][index];
+    const combinedTeam = { ...team, category: cat, originalIndex: index };
     const container = document.getElementById(`edit-${cat}-${index}`);
-    container.innerHTML = renderEditorItem(team);
+    container.innerHTML = renderEditorItem(combinedTeam);
 }
 
 function closeEditor() {
